@@ -1,6 +1,8 @@
 ﻿using Syncfusion.XlsIO;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,12 +13,12 @@ namespace DalgakiranImportTemplate
     {
         static void Main(string[] args)
         {
-            string x = Program.GetExportTemplate();
+            string x = Program.GetExportTemplate(false, Guid.Empty, Guid.Empty);
             Console.WriteLine(x);
             Console.ReadLine();
         }
 
-        public static string GetExportTemplate()
+        public static string GetExportTemplate(bool isFirst, Guid categoryId, Guid typeId)
         {
             string fileName = @"C:\Users\Василий\Desktop\dasdasd.xls";
 
@@ -39,15 +41,21 @@ namespace DalgakiranImportTemplate
             sheet.Range[1, 12].Text = "2019 Fiyat Listesi, €";
             sheet.Range[1, 13].Text = "Со склада в Стамбуле + 15 %, €";
             sheet.Range[1, 14].Text = "%6 Transport, €";
-            sheet.Range[1, 14].Text = "%10 General Expences, €";
-            sheet.Range[1, 14].Text = "%25 İskonto Payı, €";
-            sheet.Range[1, 14].Text = "%20 НДС, €";
+            sheet.Range[1, 15].Text = "%10 General Expences, €";
+            sheet.Range[1, 16].Text = "15% Profit, €";
+            sheet.Range[1, 17].Text = "%25 İskonto Payı, €";
+            sheet.Range[1, 18].Text = "%20 НДС, €";
 
-            sheet.Range[1, 1, 1, 14].VerticalAlignment = ExcelVAlign.VAlignCenter;
-            sheet.Range[1, 1, 1, 14].HorizontalAlignment = ExcelHAlign.HAlignCenter;
-            sheet.Range[1, 1, 1, 14].ColumnWidth = 20;
-            sheet.Range[1, 1, 1, 14].WrapText = true;
-            sheet.Range[1, 1, 1, 14].AutofitRows();
+            sheet.Range[1, 1, 1, 18].VerticalAlignment = ExcelVAlign.VAlignCenter;
+            sheet.Range[1, 1, 1, 18].HorizontalAlignment = ExcelHAlign.HAlignCenter;
+            sheet.Range[1, 1, 1, 18].ColumnWidth = 20;
+            sheet.Range[1, 1, 1, 18].WrapText = true;
+            sheet.Range[1, 1, 1, 18].AutofitRows();
+
+            if (!isFirst)
+            {
+                sheet = Program.GetExportData(sheet, categoryId, typeId);
+            }
 
             workbook.SaveAs(fileName);
             workbook.Close();
@@ -55,5 +63,96 @@ namespace DalgakiranImportTemplate
             return fileName;
         }
 
+        public static IWorksheet GetExportData(IWorksheet sheet, Guid categoryId, Guid typeId)
+        {
+            Guid cultureId = new Guid("1A778E3F-0A8E-E111-84A3-00155D054C03");
+            string sqlText = $@"DECLARE @Culture uniqueidentifier = '{cultureId}';
+
+                                SELECT pr.[Id],
+                                       ISNULL(pr.[TcmCodeSap], '') as CodeSap,
+	                                   ISNULL(pr.[TcmCodeOld], '') as CodeOld,
+	                                   ISNULL(pr.[TcmTurkName], '') as TurkName,
+	                                   ISNULL(pr.[TcmEngName], '') as EngName,
+	                                   ISNULL(pr.[Name], '') as RuName,
+	                                   ISNULL(prt.[Name], '') as [Type],
+	                                   ISNULL(prd.[Name], '') as Direction,
+	                                   ISNULL(prte.[Name], '') as TypeEquipment,
+	                                   ISNULL(prs.[Name], '') as Serial,
+	                                   pr.[TcmTRKarExworksEuro],
+	                                   pr.[TcmFiyatListesiEuro],
+	                                   pr.[TcmFromStockToIstanbulEuro],
+	                                   pr.[TcmTransportEuro],
+	                                   pr.[TcmGeneralExpencesEuro],
+	                                   pr.[TcmProfitEuro],
+	                                   pr.[TcmIskontoPayEuro],
+	                                   pr.[TcmNDSEuro]
+                                  FROM [Product] pr
+                                       LEFT OUTER JOIN [SysProductCategoryLcz] prt on prt.[RecordId] = pr.[CategoryId] and prt.[SysCultureId] = @Culture
+	                                   LEFT OUTER JOIN [SysProductTypeLcz] prd on prd.[RecordId] = pr.[TypeId] and prd.[SysCultureId] = @Culture
+	                                   LEFT OUTER JOIN [SysTcmTypeEquipmentLcz] prte on prte.[RecordId] = pr.[TcmTypeEquipmentId] and prte.[SysCultureId] = @Culture
+	                                   LEFT OUTER JOIN [SysTcmProductSerialLcz] prs on prs.[RecordId] = pr.[TcmProductSerialId] and prs.[SysCultureId] = @Culture";
+
+            if (categoryId != Guid.Empty || typeId != Guid.Empty)
+            {
+                sqlText += " WHERE ";
+                if (categoryId != Guid.Empty)
+                {
+                    sqlText += $@"pr.[CategoryId] = '{categoryId}'";
+
+                    if (typeId != Guid.Empty)
+                    {
+                        sqlText += $@" AND ";
+                    }
+                }
+                if (typeId != Guid.Empty)
+                {
+                    sqlText += $@"pr.[TypeId] = '{typeId}'";
+                }
+            }
+
+            DataTable dt = Program.GetDataTable(sqlText);
+
+            int r = 2;
+            for (int i = 0; i < dt.Rows.Count; i++)
+            {
+                sheet.Range[r, 1].Text = dt.Rows[i].Field<Guid>("Id").ToString();
+                sheet.Range[r, 2].Text = dt.Rows[i].Field<string>("CodeSap");
+                sheet.Range[r, 3].Text = dt.Rows[i].Field<string>("CodeOld");
+                sheet.Range[r, 4].Text = dt.Rows[i].Field<string>("TurkName");
+                sheet.Range[r, 5].Text = dt.Rows[i].Field<string>("EngName");
+                sheet.Range[r, 6].Text = dt.Rows[i].Field<string>("RuName");
+                sheet.Range[r, 7].Text = dt.Rows[i].Field<string>("Type");
+                sheet.Range[r, 8].Text = dt.Rows[i].Field<string>("Direction");
+                sheet.Range[r, 9].Text = dt.Rows[i].Field<string>("TypeEquipment");
+                sheet.Range[r, 10].Text = dt.Rows[i].Field<string>("Serial");
+                sheet.Range[r, 11].Number = dt.Rows[i].Field<int>("TcmTRKarExworksEuro");
+                sheet.Range[r, 12].Number = dt.Rows[i].Field<int>("TcmFiyatListesiEuro");
+                sheet.Range[r, 13].Number = dt.Rows[i].Field<int>("TcmFromStockToIstanbulEuro");
+                sheet.Range[r, 14].Number = dt.Rows[i].Field<int>("TcmTransportEuro");
+                sheet.Range[r, 15].Number = dt.Rows[i].Field<int>("TcmGeneralExpencesEuro");
+                sheet.Range[r, 16].Number = dt.Rows[i].Field<int>("TcmProfitEuro");
+                sheet.Range[r, 17].Number = dt.Rows[i].Field<int>("TcmIskontoPayEuro");
+                sheet.Range[r, 18].Number = dt.Rows[i].Field<int>("TcmNDSEuro");
+                r++;
+            }
+            sheet.Range[2, 1, r, 10].AutofitColumns();
+            return sheet;
+        }
+
+        public static DataTable GetDataTable(string sqlText)
+        {
+            SqlConnection connection = new SqlConnection(@"Data Source = 172.16.2.75; Initial Catalog = Dalgakiran7141; Persist Security Info = True; MultipleActiveResultSets = True; Integrated Security = False; User ID = SA; Password = !QAZxsw2@WSXzaq1; Pooling = true; Max Pool Size = 100; Async = true; Connection Timeout = 500");
+
+            connection.Open();
+
+            SqlCommand command = new SqlCommand(sqlText, connection);
+            SqlDataReader reader = command.ExecuteReader();
+            DataTable dt = new DataTable();
+
+            dt.Load(reader);
+            connection.Close();
+
+            return dt;
+        }
     }
 }
