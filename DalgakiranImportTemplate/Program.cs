@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace DalgakiranImportTemplate
 {
-    class Program
+    public class ImportTemplate
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            string x = Program.GetExportTemplate(false, Guid.Empty, Guid.Empty);
+            string x = ImportTemplate.GetExportTemplate(false, Guid.Empty, Guid.Empty);
             Console.WriteLine(x);
             Console.ReadLine();
         }
@@ -54,7 +54,7 @@ namespace DalgakiranImportTemplate
 
             if (!isFirst)
             {
-                sheet = Program.GetExportData(sheet, categoryId, typeId);
+                sheet = ImportTemplate.GetExportData(sheet, categoryId, typeId);
             }
 
             workbook.SaveAs(fileName);
@@ -110,7 +110,7 @@ namespace DalgakiranImportTemplate
                 }
             }
 
-            DataTable dt = Program.GetDataTable(sqlText);
+            DataTable dt = ImportTemplate.GetDataTable(sqlText);
 
             int r = 2;
             for (int i = 0; i < dt.Rows.Count; i++)
@@ -136,6 +136,26 @@ namespace DalgakiranImportTemplate
                 r++;
             }
             sheet.Range[2, 1, r, 10].AutofitColumns();
+
+            sheet.Range[r, 1].Text = "123123";
+            sheet.Range[r, 2].Text = "123123";
+            sheet.Range[r, 3].Text = "123123";
+            sheet.Range[r, 4].Text = "123123";
+            sheet.Range[r, 5].Text = "123123";
+            sheet.Range[r, 6].Text = "123123";
+            sheet.Range[r, 7].Text = "123123";
+            sheet.Range[r, 8].Text = "123123";
+            sheet.Range[r, 9].Text = "123123";
+            sheet.Range[r, 10].Text = "123123";
+            sheet.Range[r, 11].Number = 1;
+            sheet.Range[r, 12].Number = 2;
+            sheet.Range[r, 13].Number = 3;
+            sheet.Range[r, 14].Number = 5;
+            sheet.Range[r, 15].Number = 6;
+            sheet.Range[r, 16].Number = 7;
+            sheet.Range[r, 17].Number = 8;
+            sheet.Range[r, 18].Number = 9;
+
             return sheet;
         }
 
