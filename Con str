@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<connectionStrings>
+  <add name="redis" connectionString="host=;db=0;port=30001;maxReadPoolSize=25;maxWritePoolSize=25;Password= " />
+  <add name="defPackagesWorkingCopyPath" connectionString="%TEMP%\%APPLICATION%\%APPPOOLIDENTITY%\%WORKSPACE%\TerrasoftPackages" />
+  <add name="tempDirectoryPath" connectionString="%TEMP%\%APPLICATION%\%APPPOOLIDENTITY%\%WORKSPACE%\" />
+  <add name="sourceControlAuthPath" connectionString="%TEMP%\%APPLICATION%\%APPPOOLIDENTITY%\%WORKSPACE%\Svn" />
+  <add name="elasticsearchCredentials" connectionString="User=gs-es; Password=DEQpJMfKqUVTWg9wYVgi;" />
+  <add name="influx" connectionString="url=http://10.0.7.161:30359; user=; password=; batchIntervalMs=5000" />
+  <add name="messageBroker" connectionString="amqp://guest:guest@localhost/BPMonlineSolution" />
+  <add name="db" connectionString="Data Source=;Initial Catalog=; MultipleActiveResultSets=True;
+    Pooling = true; User Id=; Password=; Max Pool Size = 100; Async = true" />
+</connectionStrings>
